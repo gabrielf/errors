@@ -87,6 +87,23 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestMultipleNew(t *testing.T) {
+	inner := func() error {
+		return New("foo")
+	}
+
+	outer := func() error {
+		return New(inner())
+	}
+
+	err := New(outer())
+
+	if strings.Count(err.ErrorStack(), "Which caused: ") != 2 {
+		t.Errorf("Error didn't contain all three stack traces")
+		t.Errorf(err.ErrorStack())
+	}
+}
+
 func TestIs(t *testing.T) {
 
 	if Is(nil, io.EOF) {
@@ -99,6 +116,10 @@ func TestIs(t *testing.T) {
 
 	if !Is(io.EOF, New(io.EOF)) {
 		t.Errorf("io.EOF is not New(io.EOF)")
+	}
+
+	if !Is(io.EOF, New(New(io.EOF))) {
+		t.Errorf("io.EOF is not New(New(io.EOF))")
 	}
 
 	if !Is(New(io.EOF), New(io.EOF)) {

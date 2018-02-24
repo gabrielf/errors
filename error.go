@@ -191,7 +191,13 @@ func (err *Error) Callers() []uintptr {
 // ErrorStack returns a string that contains both the
 // error message and the callstack.
 func (err *Error) ErrorStack() string {
-	return err.TypeName() + " " + err.Error() + "\n" + string(err.Stack())
+	rootCause := ""
+
+	if renewed, ok := err.Err.(*Error); ok {
+		rootCause = renewed.ErrorStack() + "\nWhich caused: "
+	}
+
+	return rootCause + err.TypeName() + " " + err.Error() + "\n" + string(err.Stack())
 }
 
 // StackFrames returns an array of frames containing information about the
